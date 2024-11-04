@@ -11,6 +11,10 @@ export default class MockEthereumNode {
   public chainId: number = 0
   public blockNumber: number = 0
   public stats: MockNodeStats
+  public mockError: {
+    code: number
+    message: string
+  } | null = null
 
   constructor(private _url: string) {
     this.nockScope = nock(this._url)
@@ -44,6 +48,17 @@ export default class MockEthereumNode {
 
   public resetStats(): void {
     this.stats = new MockNodeStats()
+  }
+
+  public setErrorResponse(code: number, message: string) {
+    this.mockError = {
+      code,
+      message,
+    }
+  }
+
+  public clearError() {
+    this.mockError = null
   }
 
   private async handleIncomingRequest(payload: any): Promise<SingleResponse | SingleResponse[]> {
@@ -108,6 +123,13 @@ export default class MockEthereumNode {
         break
       }
       case 'eth_sendRawTransaction': {
+        if (this.mockError) {
+          response.error = {
+            ...this.mockError,
+            data: body.params[0],
+          }
+          return response
+        }
         response.result = keccak256(body.params[0]).toString()
         this.stats.addTransaction(body.params[0])
         break
