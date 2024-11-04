@@ -1,8 +1,8 @@
 import nock from 'nock'
-import { keccak256 } from 'ethers';
-import { SingleRequest } from './Requests.js'
-import { SingleResponse } from './Response.js'
-import { MockNodeStats } from './MockNodeStats.js';
+import {ethers, keccak256} from 'ethers'
+import { SingleRequest } from '#tests/helpers/ethereum/Requests'
+import { SingleResponse } from '#tests/helpers/ethereum/Response'
+import { MockNodeStats } from '#tests/helpers/ethereum/MockNodeStats'
 
 export default class MockEthereumNode {
   private nockScope: nock.Scope
@@ -109,10 +109,7 @@ export default class MockEthereumNode {
       }
       case 'eth_sendRawTransaction': {
         response.result = keccak256(body.params[0]).toString()
-        this.stats.sentTransactions.push({
-          rawTransaction: body.params[0],
-          hash: response.result,
-        })
+        this.stats.addTransaction(body.params[0])
         break
       }
     }
